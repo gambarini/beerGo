@@ -18,7 +18,7 @@ var BeerBox = React.createClass({
       data: filter,
       success: function(countData) {
 
-        var pages = ((countData.count - 1) / 5) + 1;
+        var pages = Math.floor(((countData.count - 1) / 5) + 1);
 
         filter.limit = 5
         filter.offset = (page * 5) - 5
