@@ -5,10 +5,14 @@ var BeerBox = React.createClass({
     return {data: []};
   },
   componentDidMount: function() {
+    this.handleFilterSubmit();
+  },
+  handleFilterSubmit: function(filter){
     $.ajax({
       url: this.props.url,
       dataType: 'json',
       cache: false,
+      data: filter,
       success: function(data) {
         this.setState({data: data});
       }.bind(this),
@@ -21,8 +25,39 @@ var BeerBox = React.createClass({
     return (
       <div className="beerBox">
         <h1>Beer</h1>
+        <BeerFilter onFilterSubmit={this.handleFilterSubmit}/>
         <BeerList data={this.state.data}/>
       </div>
+    );
+  }
+});
+
+var BeerFilter = React.createClass({
+  getInitialState: function(){
+    return {name: ''};
+  },
+  handleNameChange: function(e){
+    this.setState({name: e.target.value});
+  },
+  handleSubmit: function(e){
+    e.preventDefault();
+
+    this.props.onFilterSubmit({
+      name: this.state.name.trim()
+    });
+  },
+  render: function() {
+    return (
+      <form
+        className="beerFilterForm"
+        onSubmit={this.handleSubmit}>
+        <input
+          type="text"
+          placeholder="Beer Name"
+          value={this.state.name}
+          onChange={this.handleNameChange} />
+        <input type="submit" />
+      </form>
     );
   }
 });

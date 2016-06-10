@@ -14,8 +14,9 @@ import (
 func GetBeer(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 
 	limit, offset := GetLimitAndOffset(r.URL.Query().Get("limit"), r.URL.Query().Get("offset"))
+	nameQuery := GetNameQuery(r.URL.Query().Get("name"))
 
-	json, err := QueryBeerSample("beer", limit, offset)
+	json, err := QueryBeerSample("beer", nameQuery, limit, offset)
 
 	HandleResponse(json, err, w)
 
@@ -25,8 +26,9 @@ func GetBeer(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 func GetBrewery(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 
 	limit, offset := GetLimitAndOffset(r.URL.Query().Get("limit"), r.URL.Query().Get("offset"))
+	nameQuery := GetNameQuery(r.URL.Query().Get("name"))
 
-	json, err := QueryBeerSample("brewery", limit, offset)
+	json, err := QueryBeerSample("brewery", nameQuery, limit, offset)
 
 	HandleResponse(json, err, w)
 
@@ -51,6 +53,14 @@ func HandleResponse(json []byte, err error, w http.ResponseWriter) {
 	fmt.Fprintf(w, "%s", json)
 }
 
+// GetNameQuery ok
+func GetNameQuery(name string) string {
+	if name == "" {
+		return ""
+	}
+	return fmt.Sprintf(" and b.name like '%s' ", name+"%")
+}
+
 // GetLimitAndOffset ok
 func GetLimitAndOffset(strLimit, strOffset string) (int, int) {
 	var limit, offset int
@@ -68,9 +78,9 @@ func GetLimitAndOffset(strLimit, strOffset string) (int, int) {
 }
 
 // QueryBeerSample ok
-func QueryBeerSample(sampleType string, limit, offset int) ([]byte, error) {
+func QueryBeerSample(sampleType, nameQuery string, limit, offset int) ([]byte, error) {
 
-	sQuery := fmt.Sprintf("SELECT b.*, meta(b).id as id FROM `beer-sample` b where b.type='%s' order by b.name limit %d offset %d", sampleType, limit, offset)
+	sQuery := fmt.Sprintf("SELECT b.*, meta(b).id as id FROM `beer-sample` b where b.type='%s' %s order by b.name limit %d offset %d", sampleType, nameQuery, limit, offset)
 	myQuery := gocb.NewN1qlQuery(sQuery)
 	rows, err := bucket.ExecuteN1qlQuery(myQuery, nil)
 
