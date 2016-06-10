@@ -22,6 +22,17 @@ func GetBeer(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 
 }
 
+//CountBeer ok
+func CountBeer(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
+
+	nameQuery := GetNameQuery(r.URL.Query().Get("name"))
+
+	json, err := CountBeerSample("beer", nameQuery)
+
+	HandleResponse(json, err, w)
+
+}
+
 //GetBrewery ok
 func GetBrewery(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 
@@ -29,6 +40,17 @@ func GetBrewery(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 	nameQuery := GetNameQuery(r.URL.Query().Get("name"))
 
 	json, err := QueryBeerSample("brewery", nameQuery, limit, offset)
+
+	HandleResponse(json, err, w)
+
+}
+
+//CountBrewery ok
+func CountBrewery(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
+
+	nameQuery := GetNameQuery(r.URL.Query().Get("name"))
+
+	json, err := CountBeerSample("brewery", nameQuery)
 
 	HandleResponse(json, err, w)
 
@@ -77,12 +99,10 @@ func GetLimitAndOffset(strLimit, strOffset string) (int, int) {
 	return limit, offset
 }
 
-// QueryBeerSample ok
-func QueryBeerSample(sampleType, nameQuery string, limit, offset int) ([]byte, error) {
-
-	sQuery := fmt.Sprintf("SELECT b.*, meta(b).id as id FROM `beer-sample` b where b.type='%s' %s order by b.name limit %d offset %d", sampleType, nameQuery, limit, offset)
-	myQuery := gocb.NewN1qlQuery(sQuery)
-	rows, err := bucket.ExecuteN1qlQuery(myQuery, nil)
+// ExecuteQuery ok
+func ExecuteQuery(query string) ([]byte, error) {
+	n1qlQuery := gocb.NewN1qlQuery(query)
+	rows, err := bucket.ExecuteN1qlQuery(n1qlQuery, nil)
 
 	if err != nil {
 		return nil, err
@@ -95,9 +115,21 @@ func QueryBeerSample(sampleType, nameQuery string, limit, offset int) ([]byte, e
 		retValues = append(retValues, row)
 	}
 
-	json, err := json.Marshal(retValues)
+	return json.Marshal(retValues)
+}
 
-	return json, err
+// QueryBeerSample ok
+func QueryBeerSample(sampleType, nameQuery string, limit, offset int) ([]byte, error) {
+
+	query := fmt.Sprintf("SELECT b.*, meta(b).id as id FROM `beer-sample` b where b.type='%s' %s order by b.name limit %d offset %d", sampleType, nameQuery, limit, offset)
+	return ExecuteQuery(query)
+}
+
+// CountBeerSample ok
+func CountBeerSample(sampleType, nameQuery string) ([]byte, error) {
+
+	query := fmt.Sprintf("SELECT count(b) as count FROM `beer-sample` b where b.type='%s' %s", sampleType, nameQuery)
+	return ExecuteQuery(query)
 }
 
 var bucket *gocb.Bucket
@@ -118,6 +150,8 @@ func main() {
 
 	r.GET("/api/beer", GetBeer)
 	r.GET("/api/brewery", GetBrewery)
+	r.GET("/api/beer/count", CountBeer)
+	r.GET("/api/brewery/count", CountBrewery)
 
 	r.ServeFiles("/web/*filepath", http.Dir("web"))
 
