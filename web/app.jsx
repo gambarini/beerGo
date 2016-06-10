@@ -64,6 +64,9 @@ var BeerFilter = React.createClass({
 
 var BeerList = React.createClass({
   render: function() {
+    if(!this.props.data) return (
+      <div>No Results</div>
+    );
     var beersInfo = this.props.data.map(function(beer) {
       return (
         <BeerInfo name={beer.name} style={beer.style} key={beer.id}>
