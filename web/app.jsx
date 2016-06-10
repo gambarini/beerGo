@@ -2,31 +2,55 @@
 
 var BeerBox = React.createClass({
   getInitialState: function() {
-    return {data: []};
+    return {data: [], pageInfo: {count: 0, page: 0, pages: 0}};
   },
   componentDidMount: function() {
     this.handleFilterSubmit();
   },
-  handleFilterSubmit: function(filter){
+  handleFilterSubmit: function(filter, page){
+    if(!filter) filter = {}
+    if(!page) page = 1
+
     $.ajax({
-      url: this.props.url,
+      url: this.props.beerCountUrl,
       dataType: 'json',
       cache: false,
       data: filter,
-      success: function(data) {
-        this.setState({data: data});
+      success: function(countData) {
+
+        var pages = ((countData.count - 1) / 5) + 1;
+
+        filter.limit = 5
+        filter.offset = (page * 5) - 5
+
+        $.ajax({
+          url: this.props.beerUrl,
+          dataType: 'json',
+          cache: false,
+          data: filter,
+          success: function(data) {
+            this.setState({data: data, pageInfo: {count: countData.count, page: page, pages: pages}});
+          }.bind(this),
+          error: function(xhr, status, err) {
+            console.error(this.props.beerUrl, status, err.toString());
+          }.bind(this)
+        });
+
       }.bind(this),
       error: function(xhr, status, err) {
-        console.error(this.props.url, status, err.toString());
+        console.error(this.props.beerCountUrl, status, err.toString());
       }.bind(this)
     });
+
+
   },
   render: function() {
     return (
       <div className="beerBox">
         <h1>Beer</h1>
         <BeerFilter onFilterSubmit={this.handleFilterSubmit}/>
-        <BeerList data={this.state.data}/>
+        <BeerPaging pageInfo={this.state.pageInfo} onFilterSubmit={this.handleFilterSubmit}/>
+        <BeerList data={this.state.data} pageInfo={this.state.pageInfo}/>
       </div>
     );
   }
@@ -105,7 +129,32 @@ var BeerInfo = React.createClass({
   }
 });
 
+var BeerPaging = React.createClass({
+  handleSubmitPrev: function(e){
+    e.preventDefault();
+
+    this.props.onFilterSubmit({}, this.props.pageInfo.page - 1);
+  },
+  handleSubmitNext: function(e){
+    e.preventDefault();
+
+    this.props.onFilterSubmit({}, this.props.pageInfo.page + 1);
+  },
+  render: function(){
+    var next = this.props.pageInfo.page < this.props.pageInfo.pages ? (<button onClick={this.handleSubmitNext}>Next</button>) : "";
+    var prev = this.props.pageInfo.page > 1 ? (<button onClick={this.handleSubmitPrev}>Prev</button>) : "";
+
+    return (
+      <div>
+        <div>{prev} {this.props.pageInfo.page} {next}</div>
+        <div>Page {this.props.pageInfo.page} of {this.props.pageInfo.pages}</div>
+        <div>Total beers {this.props.pageInfo.count}</div>
+      </div>
+    )
+  }
+});
+
 ReactDOM.render(
-  <BeerBox url="/api/beer" />,
+  <BeerBox beerUrl="/api/beer" beerCountUrl="/api/beer/count" />,
   document.getElementById('content')
 );

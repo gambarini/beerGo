@@ -99,8 +99,8 @@ func GetLimitAndOffset(strLimit, strOffset string) (int, int) {
 	return limit, offset
 }
 
-// ExecuteQuery ok
-func ExecuteQuery(query string) ([]byte, error) {
+// ExecuteQueryToArray ok
+func ExecuteQueryToArray(query string) ([]byte, error) {
 	n1qlQuery := gocb.NewN1qlQuery(query)
 	rows, err := bucket.ExecuteN1qlQuery(n1qlQuery, nil)
 
@@ -118,11 +118,27 @@ func ExecuteQuery(query string) ([]byte, error) {
 	return json.Marshal(retValues)
 }
 
+// ExecuteQuery ok
+func ExecuteQuery(query string) ([]byte, error) {
+	n1qlQuery := gocb.NewN1qlQuery(query)
+	rows, err := bucket.ExecuteN1qlQuery(n1qlQuery, nil)
+
+	if err != nil {
+		return nil, err
+	}
+
+	var row interface{}
+
+	rows.Next(&row)
+
+	return json.Marshal(row)
+}
+
 // QueryBeerSample ok
 func QueryBeerSample(sampleType, nameQuery string, limit, offset int) ([]byte, error) {
 
 	query := fmt.Sprintf("SELECT b.*, meta(b).id as id FROM `beer-sample` b where b.type='%s' %s order by b.name limit %d offset %d", sampleType, nameQuery, limit, offset)
-	return ExecuteQuery(query)
+	return ExecuteQueryToArray(query)
 }
 
 // CountBeerSample ok
