@@ -2,7 +2,7 @@
 
 var BeerBox = React.createClass({
   getInitialState: function() {
-    return {data: [], pageInfo: {count: 0, page: 0, pages: 0}};
+    return {data: [], pageInfo: {count: 0, page: 0, pages: 0}, filter: {}};
   },
   componentDidMount: function() {
     this.handleFilterSubmit();
@@ -29,7 +29,11 @@ var BeerBox = React.createClass({
           cache: false,
           data: filter,
           success: function(data) {
-            this.setState({data: data, pageInfo: {count: countData.count, page: page, pages: pages}});
+            this.setState({
+              data: data,
+              pageInfo: {count: countData.count, page: page, pages: pages},
+              filter: filter
+            });
           }.bind(this),
           error: function(xhr, status, err) {
             console.error(this.props.beerUrl, status, err.toString());
@@ -49,7 +53,7 @@ var BeerBox = React.createClass({
       <div className="beerBox">
         <h1>Beer</h1>
         <BeerFilter onFilterSubmit={this.handleFilterSubmit}/>
-        <BeerPaging pageInfo={this.state.pageInfo} onFilterSubmit={this.handleFilterSubmit}/>
+        <BeerPaging pageInfo={this.state.pageInfo} onFilterSubmit={this.handleFilterSubmit} filter={this.state.filter}/>
         <BeerList data={this.state.data} pageInfo={this.state.pageInfo}/>
       </div>
     );
@@ -133,12 +137,12 @@ var BeerPaging = React.createClass({
   handleSubmitPrev: function(e){
     e.preventDefault();
 
-    this.props.onFilterSubmit({}, this.props.pageInfo.page - 1);
+    this.props.onFilterSubmit(this.props.filter, this.props.pageInfo.page - 1);
   },
   handleSubmitNext: function(e){
     e.preventDefault();
 
-    this.props.onFilterSubmit({}, this.props.pageInfo.page + 1);
+    this.props.onFilterSubmit(this.props.filter, this.props.pageInfo.page + 1);
   },
   render: function(){
     var next = this.props.pageInfo.page < this.props.pageInfo.pages ? (<button onClick={this.handleSubmitNext}>Next</button>) : "";
