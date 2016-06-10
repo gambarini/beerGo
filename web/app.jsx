@@ -2,7 +2,7 @@
 
 var BeerBox = React.createClass({
   getInitialState: function() {
-    return {data: [], pageInfo: {count: 0, page: 0, pages: 0}, filter: {}};
+    return {data: [], pageInfo: {count: 0, page: 0, pages: 0, pageSize: 10}, filter: {}};
   },
   componentDidMount: function() {
     this.handleFilterSubmit();
@@ -18,10 +18,11 @@ var BeerBox = React.createClass({
       data: filter,
       success: function(countData) {
 
-        var pages = Math.floor(((countData.count - 1) / 5) + 1);
+        var pageSize = this.state.pageInfo.pageSize;
+        var pages = Math.floor(((countData.count - 1) / pageSize) + 1);
 
-        filter.limit = 5
-        filter.offset = (page * 5) - 5
+        filter.limit = pageSize;
+        filter.offset = (page * pageSize) - pageSize;
 
         $.ajax({
           url: this.props.beerUrl,
@@ -31,7 +32,7 @@ var BeerBox = React.createClass({
           success: function(data) {
             this.setState({
               data: data,
-              pageInfo: {count: countData.count, page: page, pages: pages},
+              pageInfo: {count: countData.count, page: page, pages: pages, pageSize: pageSize},
               filter: filter
             });
           }.bind(this),
@@ -139,6 +140,16 @@ var BeerPaging = React.createClass({
 
     this.props.onFilterSubmit(this.props.filter, this.props.pageInfo.page - 1);
   },
+  handleSubmitFirst: function(e){
+    e.preventDefault();
+
+    this.props.onFilterSubmit(this.props.filter, 1);
+  },
+  handleSubmitLast: function(e){
+    e.preventDefault();
+
+    this.props.onFilterSubmit(this.props.filter, this.props.pageInfo.pages);
+  },
   handleSubmitNext: function(e){
     e.preventDefault();
 
@@ -147,12 +158,14 @@ var BeerPaging = React.createClass({
   render: function(){
     var next = this.props.pageInfo.page < this.props.pageInfo.pages ? (<button onClick={this.handleSubmitNext}>Next</button>) : "";
     var prev = this.props.pageInfo.page > 1 ? (<button onClick={this.handleSubmitPrev}>Prev</button>) : "";
+    var first = this.props.pageInfo.page > 1 ? (<button onClick={this.handleSubmitFirst}>First</button>) : "";
+    var last = this.props.pageInfo.page < this.props.pageInfo.pages ? (<button onClick={this.handleSubmitLast}>Last</button>) : "";
 
     return (
       <div>
-        <div>{prev} {this.props.pageInfo.page} {next}</div>
+        <div>{first} {prev} {this.props.pageInfo.page} {next} {last}</div>
         <div>Page {this.props.pageInfo.page} of {this.props.pageInfo.pages}</div>
-        <div>Total beers {this.props.pageInfo.count}</div>
+        <div>Total {this.props.pageInfo.pageSize} beers of {this.props.pageInfo.count}</div>
       </div>
     )
   }
