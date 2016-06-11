@@ -51,10 +51,11 @@ var BeerBox = React.createClass({
   },
   render: function() {
     return (
-      <div className="beerBox">
-        <h1>Beer</h1>
+      <div className="beerBox container-fluid">
+        <h3>Beer Search</h3>
         <BeerFilter onFilterSubmit={this.handleFilterSubmit}/>
         <BeerPaging pageInfo={this.state.pageInfo} onFilterSubmit={this.handleFilterSubmit} filter={this.state.filter}/>
+        <hr/>
         <BeerList data={this.state.data} pageInfo={this.state.pageInfo}/>
       </div>
     );
@@ -78,14 +79,17 @@ var BeerFilter = React.createClass({
   render: function() {
     return (
       <form
-        className="beerFilterForm"
+        className="beerFilterForm form-inline"
         onSubmit={this.handleSubmit}>
-        <input
-          type="text"
-          placeholder="Beer Name"
-          value={this.state.name}
-          onChange={this.handleNameChange} />
-        <input type="submit" />
+        <div className="form-group">
+          <input
+            type="text"
+            placeholder="Beer Name"
+            value={this.state.name}
+            onChange={this.handleNameChange}
+            className="form-control input-sm"/>
+        </div>
+        <button type="submit" className="btn btn-default btn-sm"><span className="glyphicon glyphicon-search" aria-hidden="true"></span> Filter</button>
       </form>
     );
   }
@@ -98,7 +102,7 @@ var BeerList = React.createClass({
     );
     var beersInfo = this.props.data.map(function(beer) {
       return (
-        <BeerInfo name={beer.name} style={beer.style} key={beer.id}>
+        <BeerInfo beer={beer}  key={beer.id}>
           {beer.description}
         </BeerInfo>
       );
@@ -121,14 +125,20 @@ var BeerInfo = React.createClass({
   render: function() {
     var md = new Remarkable();
     return (
-      <div className="beerInfo">
-        <h2 className="BeerInfoHeader">
-          {this.props.name}
-        </h2>
-        <h4>
-          {this.props.style}
-        </h4>
-        <span dangerouslySetInnerHTML={this.rawMarkup()} />
+      <div className="beerInfo panel panel-default">
+        <div className="panel-heading">
+          <h5 className="BeerInfoHeader">
+            {this.props.beer.name}
+          </h5>
+        </div>
+        <div className="panel-body">
+          <h5>
+            <span className="label label-default">{this.props.beer.style} {this.props.beer.abv}%</span>
+          </h5>
+          <i>
+          <span dangerouslySetInnerHTML={this.rawMarkup()} />
+          </i>
+        </div>
       </div>
     );
   }
@@ -156,16 +166,19 @@ var BeerPaging = React.createClass({
     this.props.onFilterSubmit(this.props.filter, this.props.pageInfo.page + 1);
   },
   render: function(){
-    var next = this.props.pageInfo.page < this.props.pageInfo.pages ? (<button onClick={this.handleSubmitNext}>Next</button>) : "";
-    var prev = this.props.pageInfo.page > 1 ? (<button onClick={this.handleSubmitPrev}>Prev</button>) : "";
-    var first = this.props.pageInfo.page > 1 ? (<button onClick={this.handleSubmitFirst}>First</button>) : "";
-    var last = this.props.pageInfo.page < this.props.pageInfo.pages ? (<button onClick={this.handleSubmitLast}>Last</button>) : "";
+    var next = this.props.pageInfo.page < this.props.pageInfo.pages ? (<button className="btn btn-default" onClick={this.handleSubmitNext}>Next</button>) : "";
+    var prev = this.props.pageInfo.page > 1 ? (<button className="btn btn-default" onClick={this.handleSubmitPrev}>Prev</button>) : "";
+    var first = this.props.pageInfo.page > 1 ? (<button className="btn btn-default" onClick={this.handleSubmitFirst}>First</button>) : "";
+    var last = this.props.pageInfo.page < this.props.pageInfo.pages ? (<button className="btn btn-default" onClick={this.handleSubmitLast}>Last</button>) : "";
 
     return (
       <div>
-        <div>{first} {prev} {this.props.pageInfo.page} {next} {last}</div>
-        <div>Page {this.props.pageInfo.page} of {this.props.pageInfo.pages}</div>
-        <div>Total {this.props.pageInfo.pageSize} beers of {this.props.pageInfo.count}</div>
+        <div>{this.props.pageInfo.pageSize} beers of {this.props.pageInfo.count} total in {this.props.pageInfo.pages} pages</div>
+          <div className="btn-group btn-group-sm" role="group">
+            {first}{prev}
+            <button className="btn btn-default">{this.props.pageInfo.page}</button>
+            {next}{last}
+          </div>
       </div>
     )
   }
