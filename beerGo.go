@@ -5,10 +5,21 @@ import (
 	"fmt"
 	"net/http"
 	"strconv"
+	"strings"
 
 	"github.com/julienschmidt/httprouter"
 	"gopkg.in/couchbase/gocb.v1"
 )
+
+//Beer ok
+type Beer struct {
+	Name        string  `json:"name"`
+	Description string  `json:"description"`
+	Style       string  `json:"style"`
+	Abv         float32 `json:"abv"`
+	BreweryID   string  `json:"brewery_id"`
+	Type        string  `json:"type"`
+}
 
 //GetBeer ok
 func GetBeer(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
@@ -19,6 +30,34 @@ func GetBeer(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 	json, err := QueryBeerSample("beer", nameQuery, limit, offset)
 
 	HandleResponse(json, err, w)
+
+}
+
+//CreateBeer ok
+func CreateBeer(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
+
+	dec := json.NewDecoder(r.Body)
+
+	var beer Beer
+	err := dec.Decode(&beer)
+
+	if err != nil {
+		w.WriteHeader(500)
+		fmt.Fprintf(w, "%s", err)
+		return
+	}
+
+	id := strings.Replace((beer.BreweryID + "-" + beer.Name), " ", "_", -1)
+	beer.Type = "beer"
+
+	bucket.Insert(id, &beer, 0)
+
+	json, _ := json.Marshal(beer)
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+
+	fmt.Fprintf(w, "%s", json)
 
 }
 
@@ -165,6 +204,7 @@ func main() {
 	r := httprouter.New()
 
 	r.GET("/api/beer", GetBeer)
+	r.POST("/api/beer", CreateBeer)
 	r.GET("/api/brewery", GetBrewery)
 	r.GET("/api/beer/count", CountBeer)
 	r.GET("/api/brewery/count", CountBrewery)

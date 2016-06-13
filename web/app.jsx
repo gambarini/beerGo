@@ -136,7 +136,7 @@ var BeerInfo = React.createClass({
             <span className="label label-default">{this.props.beer.style} {this.props.beer.abv}%</span>
           </h5>
           <i>
-          <span dangerouslySetInnerHTML={this.rawMarkup()} />
+           <span dangerouslySetInnerHTML={this.rawMarkup()} />
           </i>
         </div>
       </div>
