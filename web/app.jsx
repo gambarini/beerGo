@@ -7,6 +7,20 @@ var BeerBox = React.createClass({
   componentDidMount: function() {
     this.handleFilterSubmit();
   },
+  handleRemove: function(id) {
+    $.ajax({
+      url: this.props.beerUrl + "/" + id,
+      dataType: 'json',
+      cache: false,
+      method: "DELETE",
+      success: function(data) {
+        this.handleFilterSubmit(this.state.filter, this.state.pageInfo.page);
+      }.bind(this),
+      error: function(xhr, status, err) {
+        console.error(this.props.beerUrl, status, err.toString());
+      }.bind(this)
+    });
+  },
   handleFilterSubmit: function(filter, page){
     if(!filter) filter = {}
     if(!page) page = 1
@@ -56,7 +70,7 @@ var BeerBox = React.createClass({
         <BeerFilter onFilterSubmit={this.handleFilterSubmit}/>
         <BeerPaging pageInfo={this.state.pageInfo} onFilterSubmit={this.handleFilterSubmit} filter={this.state.filter}/>
         <hr/>
-        <BeerList data={this.state.data} pageInfo={this.state.pageInfo}/>
+        <BeerList data={this.state.data} pageInfo={this.state.pageInfo} onRemove={this.handleRemove}/>
       </div>
     );
   }
@@ -100,9 +114,10 @@ var BeerList = React.createClass({
     if(!this.props.data) return (
       <div>No Results</div>
     );
+    var removeHandler = this.props.onRemove;
     var beersInfo = this.props.data.map(function(beer) {
       return (
-        <BeerInfo beer={beer}  key={beer.id}>
+        <BeerInfo beer={beer}  key={beer.id} onRemove={removeHandler}>
           {beer.description}
         </BeerInfo>
       );
@@ -121,7 +136,9 @@ var BeerInfo = React.createClass({
       var rawMarkup = md.render(this.props.children.toString());
       return { __html: rawMarkup };
     },
-
+  handleRemove: function(e){
+    this.props.onRemove(this.props.beer.id);
+  },
   render: function() {
     var md = new Remarkable();
     return (
@@ -129,6 +146,7 @@ var BeerInfo = React.createClass({
         <div className="panel-heading">
           <h5 className="BeerInfoHeader">
             {this.props.beer.name}
+            <button type="button" onClick={this.handleRemove} className="btn btn-default btn-sm pull-right"><span className="glyphicon glyphicon-remove" aria-hidden="true"></span></button>
           </h5>
         </div>
         <div className="panel-body">
