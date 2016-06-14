@@ -7,6 +7,22 @@ var BeerBox = React.createClass({
   componentDidMount: function() {
     this.handleFilterSubmit();
   },
+  handleCreate: function(newBeer){
+    $.ajax({
+      url: this.props.beerUrl,
+      dataType: 'json',
+      contentType: 'application/json',
+      cache: false,
+      method: "POST",
+      data: JSON.stringify(newBeer),
+      success: function(data) {
+        this.handleFilterSubmit(this.state.filter, this.state.pageInfo.page);
+      }.bind(this),
+      error: function(xhr, status, err) {
+        console.error(this.props.beerUrl, status, err.toString());
+      }.bind(this)
+    });
+  },
   handleRemove: function(id) {
     $.ajax({
       url: this.props.beerUrl + "/" + id,
@@ -71,6 +87,7 @@ var BeerBox = React.createClass({
         <BeerPaging pageInfo={this.state.pageInfo} onFilterSubmit={this.handleFilterSubmit} filter={this.state.filter}/>
         <hr/>
         <BeerList data={this.state.data} pageInfo={this.state.pageInfo} onRemove={this.handleRemove}/>
+        <NewBeerModal onCreate={this.handleCreate}></NewBeerModal>
       </div>
     );
   }
@@ -90,6 +107,9 @@ var BeerFilter = React.createClass({
       name: this.state.name.trim()
     });
   },
+  handleNewBeer: function(e){
+    $('#newBeerModal').modal('show');
+  },
   render: function() {
     return (
       <form
@@ -104,6 +124,7 @@ var BeerFilter = React.createClass({
             className="form-control input-sm"/>
         </div>
         <button type="submit" className="btn btn-default btn-sm"><span className="glyphicon glyphicon-search" aria-hidden="true"></span> Filter</button>
+        <button type="button" onClick={this.handleNewBeer} className="btn btn-default btn-sm pull-right"><span className="glyphicon glyphicon-plus" aria-hidden="true"></span> New Beer</button>
       </form>
     );
   }
@@ -159,6 +180,77 @@ var BeerInfo = React.createClass({
         </div>
       </div>
     );
+  }
+});
+
+var NewBeerModal = React.createClass({
+  render: function(){
+    return (
+      <div className="modal fade" tabindex="-1" role="dialog" id="newBeerModal">
+        <div className="modal-dialog modal-lg">
+          <div className="modal-content">
+            <div className="modal-header">
+              <button type="button" className="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+              <h4 className="modal-title">New Beer</h4>
+            </div>
+            <div className="modal-body">
+              <NewBeerForm onSave={this.props.onCreate}></NewBeerForm>
+            </div>
+          </div>
+        </div>
+      </div>
+    )
+  }
+});
+
+var NewBeerForm = React.createClass({
+  getInitialState: function(){
+    return {name: '', style: '', abv: 0, description: '', brewery_id: ''}
+  },
+  handleNameChange: function(e){
+    this.setState({name: e.target.value})
+  },
+  handleStyleChange:  function(e){
+    this.setState({style: e.target.value})
+  },
+  handleAbvChange:  function(e){
+    this.setState({abv: Number(e.target.value)})
+  },
+  handleDescriptionChange:  function(e){
+    this.setState({description: e.target.value})
+  },
+  handleBreweryChange:  function(e){
+    this.setState({brewery_id: e.target.value})
+  },
+  handleSave: function(e){
+    this.props.onSave(this.state);
+  },
+  render: function(){
+    return (
+      <form>
+        <div className="form-group">
+          <label>Name</label>
+          <input type="text" value={this.state.name} onChange={this.handleNameChange} className="form-control" placeholder="Name"/>
+        </div>
+        <div className="form-group">
+          <label>Brewery</label>
+          <input type="text" value={this.state.brewery_id} onChange={this.handleBreweryChange} className="form-control" placeholder="Brewery"/>
+        </div>
+        <div className="form-group">
+          <label>Style</label>
+          <input type="text" value={this.state.style} onChange={this.handleStyleChange} className="form-control" placeholder="Style"/>
+        </div>
+        <div className="form-group">
+          <label>Abv</label>
+          <input type="number" value={this.state.abv} onChange={this.handleAbvChange} className="form-control" placeholder="Abv"/>
+        </div>
+        <div className="form-group">
+          <label>Description</label>
+          <textarea onChange={this.handleDescriptionChange} className="form-control" rows="5"></textarea>
+        </div>
+        <button type="button" value={this.state.description} onClick={this.handleSave} className="btn btn-primary">Save</button>
+      </form>
+    )
   }
 });
 
