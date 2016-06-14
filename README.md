@@ -5,5 +5,6 @@
 * FrontEnd - ReactJS + Bootstrap
 
 ## To Run
+* Make sure you have beer-sample bucket installed on couchbase
 * go run beerGo.go
-* Access with you browser the address http://localhost:9000/web/
+* Access http://localhost:9000/web/
