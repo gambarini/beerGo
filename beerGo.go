@@ -86,6 +86,38 @@ func RemoveBeer(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 
 }
 
+//EditBeer ok
+func EditBeer(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
+
+	id := p.ByName("id")
+	var beer *Beer
+
+	cas, _ := bucket.Get(id, &beer)
+
+	if beer == nil {
+		w.WriteHeader(404)
+		return
+	}
+
+	dec := json.NewDecoder(r.Body)
+
+	err := dec.Decode(&beer)
+
+	if err != nil {
+		w.WriteHeader(500)
+		fmt.Fprintf(w, "%s", err)
+	}
+
+	bucket.Replace(id, &beer, cas, 0)
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+
+	json, _ := json.Marshal(beer)
+
+	fmt.Fprintf(w, "%s", json)
+}
+
 //CountBeer ok
 func CountBeer(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 
@@ -230,6 +262,7 @@ func main() {
 
 	r.GET("/api/beer", GetBeer)
 	r.POST("/api/beer", CreateBeer)
+	r.PUT("/api/beer/:id", EditBeer)
 	r.DELETE("/api/beer/:id", RemoveBeer)
 	r.GET("/api/brewery", GetBrewery)
 	r.GET("/api/beer/count", CountBeer)

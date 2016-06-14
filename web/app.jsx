@@ -205,25 +205,26 @@ var NewBeerModal = React.createClass({
 
 var NewBeerForm = React.createClass({
   getInitialState: function(){
-    return {name: '', style: '', abv: 0, description: '', brewery_id: ''}
+    return {name: '', style: '', abv: 0, description: '', brewery_id: ''};
   },
   handleNameChange: function(e){
-    this.setState({name: e.target.value})
+    this.setState({name: e.target.value});
   },
   handleStyleChange:  function(e){
-    this.setState({style: e.target.value})
+    this.setState({style: e.target.value});
   },
   handleAbvChange:  function(e){
-    this.setState({abv: Number(e.target.value)})
+    this.setState({abv: Number(e.target.value)});
   },
   handleDescriptionChange:  function(e){
-    this.setState({description: e.target.value})
+    this.setState({description: e.target.value});
   },
   handleBreweryChange:  function(e){
-    this.setState({brewery_id: e.target.value})
+    this.setState({brewery_id: e.target.value});
   },
   handleSave: function(e){
     this.props.onSave(this.state);
+    this.setState({name: '', style: '', abv: 0, description: '', brewery_id: ''});
   },
   render: function(){
     return (
